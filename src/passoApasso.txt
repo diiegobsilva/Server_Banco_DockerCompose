@@ -1,0 +1,57 @@
+FROM node:alpine     -> Minha imagem
+
+EXPOSE 3001          -> Porta
+
+WORKDIR /opt/server      -> Diretório de Trabalho
+
+COPY ./src /opt/server/src     -> Copia os arquivos 
+COPY *.json /opt/server/ 	-> Copia os arquivos
+
+
+				 (Env = variavel de ambiente)	
+ENV DB=mongodb://localhost:27017     
+ENV PORT=3001                        
+ENV JWT_SECRET=@tokenJWT	     
+
+RUN npm i               -> Para instalar o node
+
+CMD [ "npm", "start" ]
+
+---------------------------------------------------------------------------------
+
+version: '3.8'
+
+services:
+  server:                   -> Imagem Server
+    container_name: NODE_APP      -> Nome do Container
+    build: '.'                    -> Ele vai achar o dockerfile e irá buildar
+    depends_on:                   -> Depende do banco para rodar
+      - db
+    links:                        -> Porque está linkado com o banco
+      - db 
+    ports:
+      - '3001:3001'                -> Porta
+    environment:
+      - DB=mongodb://db:27017           
+      - PORT=3001
+      - JWT_SECRET=@tokenJWT
+    networks:
+      - host                       -> Rede
+
+  db:                  			-> Imagem Banco
+    image: 'mongo'     			-> imagem que vai ser pega    
+    container_name: MONGODB_APP    -> Nome do Container
+    ports:
+      - '27018:27017'    	-> Porta
+    networks:
+      - host                  	-> Rede
+    volumes:
+      - app:/data/db            -> Local onde vai ficar armazenados os dados 
+  
+networks: 
+  host:
+    driver: bridge              -> Estou criando uma rede, para a conexão entre as duas imagens 
+
+volumes:
+  app:
+    driver: local                -> aqui estou criando o volume       
